@@ -34,7 +34,7 @@ def extract_frames(video_path: str, output_folder: str) -> None:
     pattern = f"frame_%0{FRAME_PADDING}d.png"
     cmd = [
         "ffmpeg", "-thread_queue_size", "1024", "-i", video_path,
-        "-vsync", "0", os.path.join(output_folder, pattern)
+        "-vsync", "0", "-pix_fmt", "rgb24", os.path.join(output_folder, pattern)
     ]
     print(f"🚀 Extracting frames to {output_folder}...")
     subprocess.run(cmd, check=True)
