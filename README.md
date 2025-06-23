@@ -2,9 +2,10 @@ VideoEnhancer provides scripts for video frame interpolation using RIFE and opti
 
 ## Installation
 
-Run the provided installer to fetch RIFE, FFmpeg and Python dependencies:
+Install the required Python packages and fetch the RIFE and FFmpeg binaries:
 
 ```bash
+pip install -r requirements.txt
 python install_requirements.py
 ```
 
