@@ -1,7 +1,7 @@
 import os
 import subprocess
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 
 def install_dependencies():
     """Runs the installation script for RIFE and FFmpeg."""
@@ -58,6 +58,24 @@ def is_valid_fps_factor(model, fps_factor):
     #     return False
     return True
 
+def run_upscaling(video_path):
+    """Runs optional video upscaling after interpolation."""
+    method = upscale_method_var.get()
+    scale = scale_factor_var.get()
+    base, ext = os.path.splitext(video_path)
+    upscaled_output = f"{base}_{method}_{scale}x{ext}"
+
+    command = [
+        "python", "upscale_video.py", video_path, upscaled_output,
+        "--method", method,
+        "--scale", str(scale)
+    ]
+
+    print("Running command:", " ".join(command))
+    subprocess.run(command, check=True)
+    messagebox.showinfo("Upscaling", "Video upscaling completed!")
+    return upscaled_output
+
 def run_interpolation():
     """Executes the interpolation script with user-specified parameters."""
     input_video = input_video_entry.get()
@@ -96,57 +114,96 @@ def run_interpolation():
     subprocess.run(command, check=True)
     messagebox.showinfo("Interpolation", "Video interpolation completed!")
 
+    final_output = output_video
+    if upscale_var.get():
+        final_output = run_upscaling(output_video)
+
+    messagebox.showinfo("Done", f"Processing completed! Output: {final_output}")
+
 
 install_dependencies()
 
 # Initialize Tkinter GUI
 root = tk.Tk()
 root.title("RIFE Video Interpolation GUI")
-root.geometry("600x500")
+root.geometry("650x600")
 
-# Input Video Selection
-tk.Label(root, text="Input Video:").pack()
-input_video_entry = tk.Entry(root, width=50)
-input_video_entry.pack()
-tk.Button(root, text="Browse", command=select_video).pack()
+# -------------------------------------------------
+# Input Section
+# -------------------------------------------------
+input_frame = ttk.LabelFrame(root, text="Input Video")
+input_frame.pack(fill="x", padx=10, pady=5)
 
-# Output Video Entry
-tk.Label(root, text="Output Video:").pack()
-output_video_entry = tk.Entry(root, width=50)
-output_video_entry.pack()
-tk.Button(root, text="Browse", command=select_output).pack()
+ttk.Label(input_frame, text="Input Video:").pack(anchor="w")
+input_video_entry = ttk.Entry(input_frame, width=50)
+input_video_entry.pack(side="left", padx=5, pady=2, expand=True, fill="x")
+ttk.Button(input_frame, text="Browse", command=select_video).pack(side="right", padx=5)
 
-# Parameters Display
-parameters_label = tk.Label(root, text="Parameters: ")
-parameters_label.pack()
+ttk.Label(input_frame, text="Output Video:").pack(anchor="w")
+output_video_entry = ttk.Entry(input_frame, width=50)
+output_video_entry.pack(side="left", padx=5, pady=2, expand=True, fill="x")
+ttk.Button(input_frame, text="Browse", command=select_output).pack(side="right", padx=5)
 
-# Model Selection
-tk.Label(root, text="RIFE Model:").pack()
+parameters_label = ttk.Label(input_frame, text="Parameters: ")
+parameters_label.pack(anchor="w", pady=2)
+
+# -------------------------------------------------
+# Interpolation Section
+# -------------------------------------------------
+interpolation_frame = ttk.LabelFrame(root, text="Interpolation Options")
+interpolation_frame.pack(fill="x", padx=10, pady=5)
+
+ttk.Label(interpolation_frame, text="RIFE Model:").pack(anchor="w")
 models = load_models()
 model_var = tk.StringVar(value="rife-v4.6" if "rife-v4.6" in models else (models[0] if models else "No Models Found"))
-model_dropdown = tk.OptionMenu(root, model_var, *models, command=update_output_filename)
-model_dropdown.pack()
+model_dropdown = ttk.OptionMenu(interpolation_frame, model_var, model_var.get(), *models, command=update_output_filename)
+model_dropdown.pack(fill="x", pady=2)
 
-# FPS Factor
-tk.Label(root, text="FPS Factor:").pack()
+ttk.Label(interpolation_frame, text="FPS Factor:").pack(anchor="w")
 fps_factor_var = tk.IntVar(value=2)
-fps_spinbox = tk.Spinbox(root, from_=1, to=8, textvariable=fps_factor_var, command=update_output_filename)
-fps_spinbox.pack()
+fps_spinbox = ttk.Spinbox(interpolation_frame, from_=1, to=8, textvariable=fps_factor_var, command=update_output_filename)
+fps_spinbox.pack(fill="x", pady=2)
 
-# GPU ID
-tk.Label(root, text="GPU ID:").pack()
+ttk.Label(interpolation_frame, text="GPU ID:").pack(anchor="w")
 gpu_var = tk.StringVar(value="Auto")
-tk.OptionMenu(root, gpu_var, "Auto", "0", "1", "2", "-1 (CPU)").pack()
+ttk.OptionMenu(interpolation_frame, gpu_var, gpu_var.get(), "Auto", "0", "1", "2", "-1 (CPU)").pack(fill="x", pady=2)
 
-# Extra Options
 tta_var = tk.BooleanVar()
-tk.Checkbutton(root, text="Enable TTA Mode", variable=tta_var, command=update_output_filename).pack()
+ttk.Checkbutton(interpolation_frame, text="Enable TTA Mode", variable=tta_var, command=update_output_filename).pack(anchor="w")
 uhd_var = tk.BooleanVar()
-tk.Checkbutton(root, text="Enable UHD Mode", variable=uhd_var, command=update_output_filename).pack()
+ttk.Checkbutton(interpolation_frame, text="Enable UHD Mode", variable=uhd_var, command=update_output_filename).pack(anchor="w")
 remove_duplicates_var = tk.BooleanVar()
-tk.Checkbutton(root, text="Remove Duplicate Frames", variable=remove_duplicates_var).pack()
+ttk.Checkbutton(interpolation_frame, text="Remove Duplicate Frames", variable=remove_duplicates_var).pack(anchor="w")
 
+# -------------------------------------------------
+# Upscaling Section
+# -------------------------------------------------
+upscale_frame = ttk.LabelFrame(root, text="Upscaling")
+upscale_frame.pack(fill="x", padx=10, pady=5)
+
+upscale_var = tk.BooleanVar()
+
+def update_upscale_state(*args):
+    state = "normal" if upscale_var.get() else "disabled"
+    method_combo.configure(state=state)
+    scale_combo.configure(state=state)
+
+ttk.Checkbutton(upscale_frame, text="Enable Upscaling", variable=upscale_var, command=update_upscale_state).pack(anchor="w")
+
+ttk.Label(upscale_frame, text="Method:").pack(anchor="w")
+upscale_method_var = tk.StringVar(value="RealSR")
+method_combo = ttk.Combobox(upscale_frame, textvariable=upscale_method_var, values=["RealSR", "Waifu2x"], state="disabled")
+method_combo.pack(fill="x", pady=2)
+
+ttk.Label(upscale_frame, text="Scale:").pack(anchor="w")
+scale_factor_var = tk.IntVar(value=2)
+scale_combo = ttk.Combobox(upscale_frame, textvariable=scale_factor_var, values=[2, 4], state="disabled")
+scale_combo.pack(fill="x", pady=2)
+update_upscale_state()
+
+# -------------------------------------------------
 # Run Button
-tk.Button(root, text="Start Interpolation", command=run_interpolation).pack(pady=10)
+# -------------------------------------------------
+ttk.Button(root, text="Start", command=run_interpolation).pack(pady=10)
 
 root.mainloop()
