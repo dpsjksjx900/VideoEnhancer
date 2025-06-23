@@ -1,4 +1,3 @@
-
 VideoEnhancer provides scripts for video frame interpolation using RIFE and optional upscaling with RealSR or waifu2x. A simple Tkinter GUI is included to run the tools interactively.
 
 ## Installation
@@ -51,3 +50,4 @@ python upscale_video.py src.mp4 out_upscaled.mp4 --model waifu2x-cunet
 python interpolate_video.py src.mp4 temp.mp4 --fps_factor 2
 python upscale_video.py temp.mp4 final.mp4 --model realsr-x4plus
 ```
+

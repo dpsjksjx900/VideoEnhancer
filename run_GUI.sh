@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 # Launch the VideoEnhancer GUI on Unix-like systems.
 # Requires python3 with tkinter installed. Ensure ffmpeg and the
