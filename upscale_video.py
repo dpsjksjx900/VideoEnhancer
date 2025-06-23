@@ -8,10 +8,27 @@ import subprocess
 import time
 from typing import Optional
 
+from PIL import Image
+import torch
+try:
+    from diffusers import (
+        StableDiffusionUpscalePipeline,
+        StableDiffusionLatentUpscalePipeline,
+        LDMSuperResolutionPipeline,
+    )
+except Exception as e:  # pragma: no cover - optional dependency
+    StableDiffusionUpscalePipeline = None
+    StableDiffusionLatentUpscalePipeline = None
+    LDMSuperResolutionPipeline = None
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 REALSRCNN_EXECUTABLE = "realsr-ncnn-vulkan"
 WAIFU2X_EXECUTABLE = "waifu2x-ncnn-vulkan"
+REALESRGAN_EXECUTABLE = "realesrgan-ncnn-vulkan"
+SWINIR_EXECUTABLE = "swinir-ncnn-vulkan"
+SDX4_MODEL_ID = "stabilityai/stable-diffusion-x4-upscaler"
+LDSR_MODEL_ID = "CompVis/ldm-super-resolution-4x-openimages"
 
 FRAME_PADDING = 8
 
@@ -123,7 +140,45 @@ def reconstruct_video(
 
 def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str, gpu: Optional[int]) -> None:
     """Run the selected upscaling model on extracted frames."""
-    exe = REALSRCNN_EXECUTABLE if model == "realsr" else WAIFU2X_EXECUTABLE
+    if model in {"sdx4", "ldsr"}:
+        if model == "sdx4":
+            if StableDiffusionUpscalePipeline is None:
+                raise RuntimeError("Diffusion upscaling requires the diffusers package")
+            if scale != 4:
+                raise ValueError("SDx4 upscaler only supports 4x scale")
+        else:
+            if LDMSuperResolutionPipeline is None:
+                raise RuntimeError("Diffusion upscaling requires the diffusers package")
+            if scale != 4:
+                raise ValueError("LDSR upscaler only supports 4x scale")
+
+        device = f"cuda:{gpu}" if (gpu is not None and gpu >= 0 and torch.cuda.is_available()) else "cpu"
+        dtype = torch.float16 if "cuda" in device else torch.float32
+        if model == "sdx4":
+            pipe = StableDiffusionUpscalePipeline.from_pretrained(SDX4_MODEL_ID, torch_dtype=dtype)
+        else:
+            pipe = LDMSuperResolutionPipeline.from_pretrained(LDSR_MODEL_ID, torch_dtype=dtype)
+        pipe.to(device)
+        os.makedirs(output_folder, exist_ok=True)
+        for fname in sorted(os.listdir(input_folder)):
+            if not fname.lower().endswith(".png"):
+                continue
+            img = Image.open(os.path.join(input_folder, fname)).convert("RGB")
+            if model == "sdx4":
+                result = pipe(prompt="", image=img, num_inference_steps=75).images[0]
+            else:
+                result = pipe(img, num_inference_steps=50, eta=1).images[0]
+            result.save(os.path.join(output_folder, fname))
+        print("✅ Diffusion upscaling complete.")
+        return
+
+    exe_map = {
+        "realsr": REALSRCNN_EXECUTABLE,
+        "waifu2x": WAIFU2X_EXECUTABLE,
+        "realesrgan": REALESRGAN_EXECUTABLE,
+        "swinir": SWINIR_EXECUTABLE,
+    }
+    exe = exe_map.get(model)
     cmd = [exe, "-i", input_folder, "-o", output_folder, "-s", str(scale), "-f", "png"]
     if gpu is not None:
         cmd.extend(["-g", str(gpu)])
@@ -133,11 +188,23 @@ def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Upscale a video using realsr or waifu2x")
+    parser = argparse.ArgumentParser(
+        description="Upscale a video using ncnn or diffusion models"
+    )
     parser.add_argument("input_video", help="Path to the input video")
     parser.add_argument("output_video", help="Path for the upscaled video")
-    parser.add_argument("--model", choices=["realsr", "waifu2x"], default="realsr", help="Upscaling model")
-    parser.add_argument("--scale", type=int, default=2, help="Scale factor for the model")
+    parser.add_argument(
+        "--model",
+        choices=["realsr", "waifu2x", "realesrgan", "swinir", "sdx4", "ldsr"],
+        default="realsr",
+        help="Upscaling model",
+    )
+    parser.add_argument(
+        "--scale",
+        type=int,
+        default=2,
+        help="Scale factor for ncnn models (diffusion-based models have fixed scale)",
+    )
     parser.add_argument("--gpu", type=int, help="GPU index for ncnn executable")
     parser.add_argument("--frames_dir", default="upscale_frames", help="Temporary folder for extracted frames")
     parser.add_argument("--upscaled_dir", default="upscaled_frames", help="Folder for upscaled frames")
