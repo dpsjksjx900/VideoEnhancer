@@ -160,10 +160,12 @@ def run_interpolation():
     else:
         if output_format_var.get() == "gif":
             subprocess.run(["ffmpeg", "-y", "-i", input_video, output_video], check=True)
+
             final_output = output_video
         elif os.path.abspath(input_video) != os.path.abspath(output_video):
             subprocess.run(["ffmpeg", "-y", "-i", input_video, "-c", "copy", output_video], check=True)
             final_output = output_video
+
     if upscale_var.get():
         final_output = run_upscaling(final_output)
 
