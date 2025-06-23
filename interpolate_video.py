@@ -421,12 +421,15 @@ def reconstruct_video(
     frames_folder,
     input_video,
     output_video,
-    final_fps
+    final_fps,
+    output_format=None
 ):
-    """
-    Rebuild final video using ffmpeg at 'final_fps'.
-    We map the original audio from input_video with '-map 1:a:0?' if it exists.
-    """
+    """Rebuild the final video using ffmpeg."""
+    # Determine output format either from argument or file extension
+    if output_format is None:
+        _, ext = os.path.splitext(output_video)
+        output_format = ext.lstrip(".").lower() or "mp4"
+
     # Check there is at least one frame
     files = sorted(f for f in os.listdir(frames_folder) if f.lower().endswith(".png"))
     if not files:
@@ -437,16 +440,32 @@ def reconstruct_video(
 
     frame_pattern = f"frame_%0{FRAME_PADDING}d.png"
 
-    cmd = [
-        "ffmpeg",
-        "-framerate", str(final_fps),
-        "-i", os.path.join(frames_folder, frame_pattern),
-        "-i", input_video,
-        "-map", "0:v:0", "-map", "1:a:0?",
-        "-c:v", "libx264", "-crf", "18", "-preset", "slow",
-        "-c:a", "aac", "-b:a", "192k", "-shortest",
-        output_video
-    ]
+    if output_format == "gif":
+        palette = os.path.join(frames_folder, "palette.png")
+        subprocess.run([
+            "ffmpeg", "-y", "-i", os.path.join(frames_folder, frame_pattern),
+            "-vf", "palettegen", palette
+        ], check=True)
+        cmd = [
+            "ffmpeg", "-y", "-framerate", str(final_fps),
+            "-i", os.path.join(frames_folder, frame_pattern),
+            "-i", palette,
+            "-lavfi", f"fps={final_fps}[x];[x][1:v]paletteuse",
+            "-loop", "0",
+            output_video
+        ]
+    else:
+        cmd = [
+            "ffmpeg",
+            "-framerate", str(final_fps),
+            "-i", os.path.join(frames_folder, frame_pattern),
+            "-i", input_video,
+            "-map", "0:v:0", "-map", "1:a:0?",
+            "-c:v", "libx264", "-crf", "18", "-preset", "slow",
+            "-c:a", "aac", "-b:a", "192k", "-shortest",
+            output_video
+        ]
+
     print("🚀 Reconstructing final video with:", " ".join(cmd))
     subprocess.run(cmd, check=True)
     print(f"✅ Final video saved as: {output_video}")
@@ -475,6 +494,11 @@ def main():
     parser.add_argument("--temporal_tta", action="store_true", help="Enable temporal TTA -z")
     parser.add_argument("--uhd", action="store_true", help="Enable UHD -u")
     parser.add_argument("--pattern_format", help="Pattern format for rife-ncnn-vulkan")
+    parser.add_argument(
+        "--output_format",
+        choices=["mp4", "gif"],
+        help="Output format (defaults to extension of output path)"
+    )
 
     args = parser.parse_args()
 
@@ -485,6 +509,10 @@ def main():
     args.restored_frames = clean_path(args.restored_frames)
     args.final_frames = clean_path(args.final_frames)
     args.temp_folder = clean_path(args.temp_folder)
+
+    if args.output_format is None:
+        _, ext = os.path.splitext(args.output_video)
+        args.output_format = ext.lstrip(".").lower() or "mp4"
 
     # Initialize a list to track all temporary folders that need to be cleaned
     temp_folders = [
@@ -595,7 +623,13 @@ def main():
         final_fps = original_fps * args.fps_factor
         unique_out = get_unique_filename(args.output_video)
         print(f"🎬 Reconstructing video at {final_fps} FPS...")
-        reconstruct_video(args.final_frames, args.input_video, unique_out, final_fps=final_fps)
+        reconstruct_video(
+            args.final_frames,
+            args.input_video,
+            unique_out,
+            final_fps=final_fps,
+            output_format=args.output_format,
+        )
         print("✅ Done! Output video:", unique_out)
 
     finally:

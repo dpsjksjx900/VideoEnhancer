@@ -79,19 +79,43 @@ def get_unique_filename(path: str) -> str:
     return new_name
 
 
-def reconstruct_video(frames_folder: str, input_video: str, output_video: str, fps: float) -> None:
+def reconstruct_video(
+    frames_folder: str,
+    input_video: str,
+    output_video: str,
+    fps: float,
+    output_format: str = None,
+) -> None:
     """Rebuild video from frames preserving original audio."""
+    if output_format is None:
+        _, ext = os.path.splitext(output_video)
+        output_format = ext.lstrip(".").lower() or "mp4"
+
     rename_frames(frames_folder)
     pattern = f"frame_%0{FRAME_PADDING}d.png"
-    cmd = [
-        "ffmpeg", "-framerate", str(fps),
-        "-i", os.path.join(frames_folder, pattern),
-        "-i", input_video,
-        "-map", "0:v:0", "-map", "1:a:0?",
-        "-c:v", "libx264", "-crf", "18", "-preset", "slow",
-        "-c:a", "aac", "-b:a", "192k", "-shortest",
-        output_video,
-    ]
+
+    if output_format == "gif":
+        palette = os.path.join(frames_folder, "palette.png")
+        subprocess.run(["ffmpeg", "-y", "-i", os.path.join(frames_folder, pattern), "-vf", "palettegen", palette], check=True)
+        cmd = [
+            "ffmpeg", "-y", "-framerate", str(fps),
+            "-i", os.path.join(frames_folder, pattern),
+            "-i", palette,
+            "-lavfi", f"fps={fps}[x];[x][1:v]paletteuse",
+            "-loop", "0",
+            output_video,
+        ]
+    else:
+        cmd = [
+            "ffmpeg", "-framerate", str(fps),
+            "-i", os.path.join(frames_folder, pattern),
+            "-i", input_video,
+            "-map", "0:v:0", "-map", "1:a:0?",
+            "-c:v", "libx264", "-crf", "18", "-preset", "slow",
+            "-c:a", "aac", "-b:a", "192k", "-shortest",
+            output_video,
+        ]
+
     print("🚀 Reconstructing final video...")
     subprocess.run(cmd, check=True)
     print(f"✅ Final video saved as: {output_video}")
@@ -117,6 +141,11 @@ def main() -> None:
     parser.add_argument("--gpu", type=int, help="GPU index for ncnn executable")
     parser.add_argument("--frames_dir", default="upscale_frames", help="Temporary folder for extracted frames")
     parser.add_argument("--upscaled_dir", default="upscaled_frames", help="Folder for upscaled frames")
+    parser.add_argument(
+        "--output_format",
+        choices=["mp4", "gif"],
+        help="Output format (defaults to extension of output path)",
+    )
     args = parser.parse_args()
 
     # Clean paths
@@ -124,6 +153,10 @@ def main() -> None:
     args.output_video = clean_path(args.output_video)
     args.frames_dir = clean_path(args.frames_dir)
     args.upscaled_dir = clean_path(args.upscaled_dir)
+
+    if args.output_format is None:
+        _, ext = os.path.splitext(args.output_video)
+        args.output_format = ext.lstrip(".").lower() or "mp4"
 
     try:
         clear_directory(args.frames_dir)
@@ -135,7 +168,13 @@ def main() -> None:
         upscale_frames(args.model, args.scale, args.frames_dir, args.upscaled_dir, args.gpu)
         fps = get_video_fps(args.input_video)
         unique_out = get_unique_filename(args.output_video)
-        reconstruct_video(args.upscaled_dir, args.input_video, unique_out, fps)
+        reconstruct_video(
+            args.upscaled_dir,
+            args.input_video,
+            unique_out,
+            fps,
+            output_format=args.output_format,
+        )
         print("✅ Done! Output video:", unique_out)
     except subprocess.CalledProcessError as e:
         print(f"❌ Command failed: {e}")

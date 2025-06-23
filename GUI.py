@@ -16,14 +16,16 @@ def install_dependencies():
 
 def select_video():
     """Opens file dialog to select input video."""
-    file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mkv")])
+    file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mkv;*.gif")])
     input_video_entry.delete(0, tk.END)
     input_video_entry.insert(0, file_path)
     update_output_filename()
 
 def select_output():
     """Opens file dialog to select output video location."""
-    file_path = filedialog.asksaveasfilename(defaultextension=".mp4", filetypes=[("MP4 files", "*.mp4")])
+    ext = "." + output_format_var.get()
+    filetypes = [("MP4 files", "*.mp4"), ("GIF files", "*.gif"), ("All Files", "*.*")]
+    file_path = filedialog.asksaveasfilename(defaultextension=ext, filetypes=filetypes)
     output_video_entry.delete(0, tk.END)
     output_video_entry.insert(0, file_path)
 
@@ -47,10 +49,11 @@ def update_output_filename(*args):
     input_video = input_video_entry.get()
     if not input_video:
         return
-    
+
     base_name = os.path.splitext(os.path.basename(input_video))[0]
     param_string = f"_fps{fps_factor_var.get()}_{model_var.get()}"
-    output_name = f"{base_name}{param_string}.mp4"
+    ext = output_format_var.get()
+    output_name = f"{base_name}{param_string}.{ext}"
     output_video_entry.delete(0, tk.END)
     output_video_entry.insert(0, os.path.join(os.path.dirname(input_video), output_name))
     parameters_label.config(text=f"Parameters: {param_string}")
@@ -91,7 +94,8 @@ def run_upscaling(video_path):
     command = [
         "python", "upscale_video.py", video_path, upscaled_output,
         "--model", model_arg,
-        "--scale", str(scale)
+        "--scale", str(scale),
+        "--output_format", output_format_var.get()
     ]
 
     print("Running command:", " ".join(command))
@@ -121,7 +125,8 @@ def run_interpolation():
     command = [
         "python", "interpolate_video.py", input_video, output_video,
         "--model", model,
-        "--fps_factor", str(fps_factor)
+        "--fps_factor", str(fps_factor),
+        "--output_format", output_format_var.get()
     ]
     
     if gpu_id != "Auto":
@@ -151,6 +156,8 @@ root = TkinterDnD.Tk() if HAS_DND else tk.Tk()
 root.title("RIFE Video Interpolation GUI")
 root.geometry("650x600")
 
+output_format_var = tk.StringVar(value="mp4")
+
 # -------------------------------------------------
 # Input Section
 # -------------------------------------------------
@@ -166,6 +173,9 @@ ttk.Label(input_frame, text="Output Video:").pack(anchor="w")
 output_video_entry = ttk.Entry(input_frame, width=50)
 output_video_entry.pack(side="left", padx=5, pady=2, expand=True, fill="x")
 ttk.Button(input_frame, text="Browse", command=select_output).pack(side="right", padx=5)
+ttk.Label(input_frame, text="Format:").pack(anchor="w")
+format_menu = ttk.OptionMenu(input_frame, output_format_var, output_format_var.get(), "mp4", "gif", command=update_output_filename)
+format_menu.pack(fill="x", pady=2)
 
 if HAS_DND:
     input_video_entry.drop_target_register(DND_FILES)

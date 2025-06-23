@@ -7,6 +7,9 @@ import json
 import requests
 import shutil
 
+REALSRCNN_EXECUTABLE = "realsr-ncnn-vulkan"
+WAIFU2X_EXECUTABLE = "waifu2x-ncnn-vulkan"
+
 # Constants
 RIFE_API_URL = "https://api.github.com/repos/nihui/rife-ncnn-vulkan/releases/latest"
 RIFE_FOLDER = "rife-ncnn-vulkan"
@@ -94,6 +97,11 @@ def check_rife():
     """Check if RIFE is installed."""
     return os.path.exists(os.path.join(RIFE_FOLDER, "rife-ncnn-vulkan.exe"))
 
+
+def check_model_executable(name):
+    """Check if an executable is available in PATH."""
+    return shutil.which(name) is not None
+
 def install_rife():
     """Download and install the latest RIFE ncnn Vulkan version."""
     if check_rife():
@@ -134,6 +142,16 @@ def verify_installation():
         print("✅ RIFE is ready.")
     else:
         print("❌ RIFE installation failed!")
+
+    if check_model_executable(REALSRCNN_EXECUTABLE):
+        print("✅ RealSR is available.")
+    else:
+        print("❌ RealSR executable not found.")
+
+    if check_model_executable(WAIFU2X_EXECUTABLE):
+        print("✅ Waifu2x is available.")
+    else:
+        print("❌ Waifu2x executable not found.")
 
 def main():
     if platform.system() != "Windows":
