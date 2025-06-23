@@ -100,6 +100,9 @@ def run_upscaling(video_path):
     """Runs optional video upscaling after interpolation."""
     method = upscale_method_var.get()
     scale = scale_factor_var.get()
+
+    if method in {"SDx4", "LDSR"}:
+        scale = 4
     base = os.path.splitext(video_path)[0]
     ext = "." + output_format_var.get()
     upscaled_output = f"{base}_{method}_{scale}x{ext}"
@@ -278,7 +281,12 @@ ttk.Checkbutton(upscale_frame, text="Enable Upscaling", variable=upscale_var, co
 
 ttk.Label(upscale_frame, text="Method:").pack(anchor="w")
 upscale_method_var = tk.StringVar(value="RealSR")
-method_combo = ttk.Combobox(upscale_frame, textvariable=upscale_method_var, values=["RealSR", "Waifu2x"], state="disabled")
+method_combo = ttk.Combobox(
+    upscale_frame,
+    textvariable=upscale_method_var,
+    values=["RealSR", "Waifu2x", "RealESRGAN", "SwinIR", "SDx4", "LDSR"],
+    state="disabled",
+)
 method_combo.pack(fill="x", pady=2)
 
 ttk.Label(upscale_frame, text="Scale:").pack(anchor="w")

@@ -3,3 +3,6 @@ opencv-python
 tqdm
 requests
 tkinterdnd2
+diffusers
+torch
+pillow

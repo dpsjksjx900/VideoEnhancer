@@ -1,20 +1,15 @@
-VideoEnhancer provides scripts for video frame interpolation using RIFE and optional upscaling with RealSR or waifu2x. A simple Tkinter GUI is included to run the tools interactively.
+VideoEnhancer provides scripts for video frame interpolation using RIFE and optional upscaling with multiple models including RealSR, waifu2x, RealESRGAN, SwinIR and diffusion-based pipelines. A simple Tkinter GUI is included to run the tools interactively.
 
 ## Installation
 
-Install the required Python packages and fetch the RIFE and FFmpeg binaries:
+Install the required Python packages and fetch the RIFE, FFmpeg and upscaling binaries automatically:
 
 ```bash
 pip install -r requirements.txt
 python install_requirements.py
 ```
 
-For upscaling you need external binaries:
-
-- **RealSR** – download the `realsr-ncnn-vulkan` release from [nihui/realsr-ncnn-vulkan](https://github.com/nihui/realsr-ncnn-vulkan/releases)
-- **waifu2x** – download the `waifu2x-ncnn-vulkan` release from [nihui/waifu2x-ncnn-vulkan](https://github.com/nihui/waifu2x-ncnn-vulkan/releases)
-
-Place the extracted folders next to the Python scripts or adjust your PATH so the executables are found.
+The `install_requirements.py` script now downloads the latest RealSR, waifu2x, RealESRGAN and SwinIR executables automatically. Diffusion model weights are fetched on first use.
 
 ## Interpolating Videos
 
@@ -26,13 +21,13 @@ python interpolate_video.py input.mp4 output.mp4 --model rife-v4.6 --fps_factor 
 
 ## Upscaling Videos
 
-`upscale_video.py` uses RealSR or waifu2x to increase the resolution of a video. The output format can also be chosen with `--output_format`. Specify the model name and output path:
+`upscale_video.py` can upscale videos using RealSR, waifu2x, RealESRGAN, SwinIR or diffusion models such as SDx4 and LDSR. Specify the model name and output path:
 
 ```bash
-python upscale_video.py input.mp4 output_upscaled.mp4 --model realsr-x4plus --output_format mp4
+python upscale_video.py input.mp4 output_upscaled.mp4 --model realsr --scale 2 --output_format mp4
 ```
 
-Available models include `realsr-x4plus`, `realsr-x4plus-anime`, `waifu2x-cunet` and `waifu2x-upresnet10`. Check the respective repositories for more model options.
+Available models include `realsr`, `waifu2x`, `realesrgan`, `swinir`, `sdx4` and `ldsr`. RealSR and waifu2x support multiple internal models such as `realsr-x4plus` or `waifu2x-cunet`.
 
 ### GUI Usage
 
@@ -45,10 +40,10 @@ The Tkinter GUI (`GUI.py`) now exposes upscaling alongside interpolation. Select
 python interpolate_video.py src.mp4 out.gif --fps_factor 4 --output_format gif
 
 # Upscale only
-python upscale_video.py src.gif out_upscaled.gif --model waifu2x-cunet --output_format gif
+python upscale_video.py src.gif out_upscaled.gif --model sdx4 --scale 4 --output_format gif
 
 # Interpolate then upscale
 python interpolate_video.py src.mp4 temp.mp4 --fps_factor 2
-python upscale_video.py temp.mp4 final.mp4 --model realsr-x4plus
+python upscale_video.py temp.mp4 final.mp4 --model sdx4 --scale 4
 ```
 
