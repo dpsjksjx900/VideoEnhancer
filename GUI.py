@@ -180,6 +180,7 @@ root.title("RIFE Video Interpolation GUI")
 root.geometry("650x600")
 
 output_format_var = tk.StringVar(value="mp4")
+interpolate_var = tk.BooleanVar(value=True)
 
 # -------------------------------------------------
 # Input Section
