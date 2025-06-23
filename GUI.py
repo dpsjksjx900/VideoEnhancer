@@ -100,7 +100,8 @@ def run_upscaling(video_path):
     """Runs optional video upscaling after interpolation."""
     method = upscale_method_var.get()
     scale = scale_factor_var.get()
-    base, ext = os.path.splitext(video_path)
+    base = os.path.splitext(video_path)[0]
+    ext = "." + output_format_var.get()
     upscaled_output = f"{base}_{method}_{scale}x{ext}"
 
     model_arg = method.lower()
@@ -159,8 +160,10 @@ def run_interpolation():
     else:
         if output_format_var.get() == "gif":
             subprocess.run(["ffmpeg", "-y", "-i", input_video, output_video], check=True)
+            final_output = output_video
         elif os.path.abspath(input_video) != os.path.abspath(output_video):
             subprocess.run(["ffmpeg", "-y", "-i", input_video, "-c", "copy", output_video], check=True)
+            final_output = output_video
     if upscale_var.get():
         final_output = run_upscaling(final_output)
 
