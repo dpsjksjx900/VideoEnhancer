@@ -1,4 +1,3 @@
-# VideoEnhancer
 
 VideoEnhancer provides scripts for video frame interpolation using RIFE and optional upscaling with RealSR or waifu2x. A simple Tkinter GUI is included to run the tools interactively.
 
