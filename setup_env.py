@@ -1,5 +1,5 @@
-import os
 import sys
+import os
 import subprocess
 
 VENV_DIR = "venv"
