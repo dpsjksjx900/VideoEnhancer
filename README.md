@@ -17,18 +17,18 @@ Place the extracted folders next to the Python scripts or adjust your PATH so th
 
 ## Interpolating Videos
 
-`interpolate_video.py` extracts frames, removes duplicates, interpolates to the desired frame rate and reconstructs a new video. Example:
+`interpolate_video.py` extracts frames, removes duplicates, interpolates to the desired frame rate and reconstructs a new video. The output format can be selected with the `--output_format` option (mp4 or gif). Example:
 
 ```bash
-python interpolate_video.py input.mp4 output.mp4 --model rife-v4.6 --fps_factor 2
+python interpolate_video.py input.mp4 output.mp4 --model rife-v4.6 --fps_factor 2 --output_format mp4
 ```
 
 ## Upscaling Videos
 
-`upscale_video.py` uses RealSR or waifu2x to increase the resolution of a video. Specify the model name and output path:
+`upscale_video.py` uses RealSR or waifu2x to increase the resolution of a video. The output format can also be chosen with `--output_format`. Specify the model name and output path:
 
 ```bash
-python upscale_video.py input.mp4 output_upscaled.mp4 --model realsr-x4plus
+python upscale_video.py input.mp4 output_upscaled.mp4 --model realsr-x4plus --output_format mp4
 ```
 
 Available models include `realsr-x4plus`, `realsr-x4plus-anime`, `waifu2x-cunet` and `waifu2x-upresnet10`. Check the respective repositories for more model options.
@@ -41,10 +41,10 @@ The Tkinter GUI (`GUI.py`) now exposes upscaling alongside interpolation. Select
 
 ```bash
 # Interpolate only
-python interpolate_video.py src.mp4 out.mp4 --fps_factor 4
+python interpolate_video.py src.mp4 out.gif --fps_factor 4 --output_format gif
 
 # Upscale only
-python upscale_video.py src.mp4 out_upscaled.mp4 --model waifu2x-cunet
+python upscale_video.py src.gif out_upscaled.gif --model waifu2x-cunet --output_format gif
 
 # Interpolate then upscale
 python interpolate_video.py src.mp4 temp.mp4 --fps_factor 2
