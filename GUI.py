@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -62,7 +63,9 @@ def update_output_filename(*args):
         return
 
     base_name = os.path.splitext(os.path.basename(input_video))[0]
-    param_string = f"_fps{fps_factor_var.get()}_{model_var.get()}"
+    param_string = ""
+    if interpolate_var.get():
+        param_string = f"_fps{fps_factor_var.get()}_{model_var.get()}"
     ext = output_format_var.get()
     output_name = f"{base_name}{param_string}.{ext}"
     output_video_entry.delete(0, tk.END)
@@ -111,7 +114,6 @@ def run_upscaling(video_path):
 
     print("Running command:", " ".join(command))
     subprocess.run(command, check=True)
-    messagebox.showinfo("Upscaling", "Video upscaling completed!")
     return upscaled_output
 
 def run_interpolation():
@@ -133,29 +135,34 @@ def run_interpolation():
         messagebox.showerror("Error", "Please select input and output videos.")
         return
     
-    command = [
-        sys.executable, "interpolate_video.py", input_video, output_video,
-        "--model", model,
-        "--fps_factor", str(fps_factor),
-        "--output_format", output_format_var.get()
-    ]
-    
-    if gpu_id != "Auto":
-        command.extend(["--gpu_id", str(gpu_id)])
-    if tta:
-        command.append(tta)
-    if uhd:
-        command.append(uhd)
-    if remove_duplicates:
-        command.append(remove_duplicates)
-    
-    print("Running command:", " ".join(command))
-    subprocess.run(command, check=True)
-    messagebox.showinfo("Interpolation", "Video interpolation completed!")
+    final_output = input_video
+    if interpolate_var.get():
+        command = [
+            sys.executable, "interpolate_video.py", input_video, output_video,
+            "--model", model,
+            "--fps_factor", str(fps_factor),
+            "--output_format", output_format_var.get()
+        ]
 
-    final_output = output_video
+        if gpu_id != "Auto":
+            command.extend(["--gpu_id", str(gpu_id)])
+        if tta:
+            command.append(tta)
+        if uhd:
+            command.append(uhd)
+        if remove_duplicates:
+            command.append(remove_duplicates)
+
+        print("Running command:", " ".join(command))
+        subprocess.run(command, check=True)
+        final_output = output_video
+    else:
+        if output_format_var.get() == "gif":
+            subprocess.run(["ffmpeg", "-y", "-i", input_video, output_video], check=True)
+        elif os.path.abspath(input_video) != os.path.abspath(output_video):
+            subprocess.run(["ffmpeg", "-y", "-i", input_video, "-c", "copy", output_video], check=True)
     if upscale_var.get():
-        final_output = run_upscaling(output_video)
+        final_output = run_upscaling(final_output)
 
     messagebox.showinfo("Done", f"Processing completed! Output: {final_output}")
 
@@ -203,6 +210,14 @@ parameters_label.pack(anchor="w", pady=2)
 interpolation_frame = ttk.LabelFrame(root, text="Interpolation Options")
 interpolation_frame.pack(fill="x", padx=10, pady=5)
 
+interpolate_check = ttk.Checkbutton(
+    interpolation_frame,
+    text="Enable Frame Interpolation",
+    variable=interpolate_var,
+    command=lambda: [update_output_filename(), update_interpolation_state()]
+)
+interpolate_check.pack(anchor="w")
+
 ttk.Label(interpolation_frame, text="RIFE Model:").pack(anchor="w")
 models = load_models()
 model_var = tk.StringVar(value="rife-v4.6" if "rife-v4.6" in models else (models[0] if models else "No Models Found"))
@@ -216,14 +231,29 @@ fps_spinbox.pack(fill="x", pady=2)
 
 ttk.Label(interpolation_frame, text="GPU ID:").pack(anchor="w")
 gpu_var = tk.StringVar(value="Auto")
-ttk.OptionMenu(interpolation_frame, gpu_var, gpu_var.get(), "Auto", "0", "1", "2", "-1 (CPU)").pack(fill="x", pady=2)
+gpu_menu = ttk.OptionMenu(interpolation_frame, gpu_var, gpu_var.get(), "Auto", "0", "1", "2", "-1 (CPU)")
+gpu_menu.pack(fill="x", pady=2)
 
 tta_var = tk.BooleanVar()
-ttk.Checkbutton(interpolation_frame, text="Enable TTA Mode", variable=tta_var, command=update_output_filename).pack(anchor="w")
+tta_check = ttk.Checkbutton(interpolation_frame, text="Enable TTA Mode", variable=tta_var, command=update_output_filename)
+tta_check.pack(anchor="w")
 uhd_var = tk.BooleanVar()
-ttk.Checkbutton(interpolation_frame, text="Enable UHD Mode", variable=uhd_var, command=update_output_filename).pack(anchor="w")
+uhd_check = ttk.Checkbutton(interpolation_frame, text="Enable UHD Mode", variable=uhd_var, command=update_output_filename)
+uhd_check.pack(anchor="w")
 remove_duplicates_var = tk.BooleanVar()
-ttk.Checkbutton(interpolation_frame, text="Remove Duplicate Frames", variable=remove_duplicates_var).pack(anchor="w")
+remove_duplicates_check = ttk.Checkbutton(interpolation_frame, text="Remove Duplicate Frames", variable=remove_duplicates_var)
+remove_duplicates_check.pack(anchor="w")
+
+def update_interpolation_state(*args):
+    state = "normal" if interpolate_var.get() else "disabled"
+    model_dropdown.configure(state=state)
+    fps_spinbox.configure(state=state)
+    gpu_menu.configure(state=state)
+    tta_check.configure(state=state)
+    uhd_check.configure(state=state)
+    remove_duplicates_check.configure(state=state)
+
+update_interpolation_state()
 
 # -------------------------------------------------
 # Upscaling Section
