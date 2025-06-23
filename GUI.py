@@ -3,6 +3,12 @@ import subprocess
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+    HAS_DND = True
+except ImportError:
+    HAS_DND = False
+
 def install_dependencies():
     """Runs the installation script for RIFE and FFmpeg."""
     subprocess.run(["python", "install_requirements.py"], check=True)
@@ -20,6 +26,21 @@ def select_output():
     file_path = filedialog.asksaveasfilename(defaultextension=".mp4", filetypes=[("MP4 files", "*.mp4")])
     output_video_entry.delete(0, tk.END)
     output_video_entry.insert(0, file_path)
+
+def handle_input_drop(event):
+    """Handle a file dropped onto the input entry."""
+    if event.data:
+        path = root.tk.splitlist(event.data)[0]
+        input_video_entry.delete(0, tk.END)
+        input_video_entry.insert(0, path)
+        update_output_filename()
+
+def handle_output_drop(event):
+    """Handle a file dropped onto the output entry."""
+    if event.data:
+        path = root.tk.splitlist(event.data)[0]
+        output_video_entry.delete(0, tk.END)
+        output_video_entry.insert(0, path)
 
 def update_output_filename(*args):
     """Updates the output filename based on selected parameters."""
@@ -65,9 +86,11 @@ def run_upscaling(video_path):
     base, ext = os.path.splitext(video_path)
     upscaled_output = f"{base}_{method}_{scale}x{ext}"
 
+    model_arg = method.lower()
+
     command = [
         "python", "upscale_video.py", video_path, upscaled_output,
-        "--method", method,
+        "--model", model_arg,
         "--scale", str(scale)
     ]
 
@@ -124,7 +147,7 @@ def run_interpolation():
 install_dependencies()
 
 # Initialize Tkinter GUI
-root = tk.Tk()
+root = TkinterDnD.Tk() if HAS_DND else tk.Tk()
 root.title("RIFE Video Interpolation GUI")
 root.geometry("650x600")
 
@@ -143,6 +166,12 @@ ttk.Label(input_frame, text="Output Video:").pack(anchor="w")
 output_video_entry = ttk.Entry(input_frame, width=50)
 output_video_entry.pack(side="left", padx=5, pady=2, expand=True, fill="x")
 ttk.Button(input_frame, text="Browse", command=select_output).pack(side="right", padx=5)
+
+if HAS_DND:
+    input_video_entry.drop_target_register(DND_FILES)
+    input_video_entry.dnd_bind("<<Drop>>", handle_input_drop)
+    output_video_entry.drop_target_register(DND_FILES)
+    output_video_entry.dnd_bind("<<Drop>>", handle_output_drop)
 
 parameters_label = ttk.Label(input_frame, text="Parameters: ")
 parameters_label.pack(anchor="w", pady=2)
