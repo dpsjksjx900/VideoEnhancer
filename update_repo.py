@@ -9,7 +9,6 @@ import tempfile
 DEFAULT_REMOTE = "https://github.com/dpsjksjx900/VideoEnhancer.git"
 ZIP_URL = "https://codeload.github.com/dpsjksjx900/VideoEnhancer/zip/refs/heads/main"
 
-
 def get_remote_url(repo_dir: str) -> str | None:
     """Return the URL of the remote named 'origin' for the given repo."""
     try:
@@ -27,6 +26,7 @@ def get_remote_url(repo_dir: str) -> str | None:
 def update_repo():
     repo_dir = os.path.dirname(os.path.abspath(__file__))
     git_dir = os.path.join(repo_dir, ".git")
+
 
     if os.path.exists(git_dir):
         remote = get_remote_url(repo_dir)
