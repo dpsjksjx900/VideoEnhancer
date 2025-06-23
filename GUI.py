@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -7,11 +8,21 @@ try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
     HAS_DND = True
 except ImportError:
-    HAS_DND = False
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "tkinterdnd2"], check=True)
+        from tkinterdnd2 import DND_FILES, TkinterDnD
+        HAS_DND = True
+    except Exception:
+        print("Drag-and-drop disabled. Install tkinterdnd2 for this feature.")
+        HAS_DND = False
 
 def install_dependencies():
     """Runs the installation script for RIFE and FFmpeg."""
-    subprocess.run(["python", "install_requirements.py"], check=True)
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
+        subprocess.run([sys.executable, "install_requirements.py"], check=True)
+    except subprocess.CalledProcessError:
+        print("Failed to run install_requirements.py. Ensure requirements.txt packages are installed.")
     # messagebox.showinfo("Installation", "Dependencies installed successfully!")
 
 def select_video():
