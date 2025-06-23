@@ -1,36 +1,53 @@
-# VideoEnhancer
+VideoEnhancer provides scripts for video frame interpolation using RIFE and optional upscaling with RealSR or waifu2x. A simple Tkinter GUI is included to run the tools interactively.
 
-This project contains utilities for video interpolation using the RIFE engine and related tools.
+## Installation
 
-## Running the GUI
-
-Use the GUI to pick videos and configure interpolation parameters.
-
-- **Windows:** run `run_GUI.bat`.
-- **Linux/macOS:** execute `./run_GUI.sh`.
-
-## Updating the Repository
-
-To pull the latest version of this project from GitHub execute:
-
-```bash
-python update_repo.py
-```
-
-## Installing Requirements (Windows)
-
-The script `install_requirements.py` downloads FFmpeg and the latest RIFE binaries:
+Run the provided installer to fetch RIFE, FFmpeg and Python dependencies:
 
 ```bash
 python install_requirements.py
 ```
 
-## Python Environment Setup
+For upscaling you need external binaries:
 
-Create an isolated Python environment and install the required packages with:
+- **RealSR** – download the `realsr-ncnn-vulkan` release from [nihui/realsr-ncnn-vulkan](https://github.com/nihui/realsr-ncnn-vulkan/releases)
+- **waifu2x** – download the `waifu2x-ncnn-vulkan` release from [nihui/waifu2x-ncnn-vulkan](https://github.com/nihui/waifu2x-ncnn-vulkan/releases)
+
+Place the extracted folders next to the Python scripts or adjust your PATH so the executables are found.
+
+## Interpolating Videos
+
+`interpolate_video.py` extracts frames, removes duplicates, interpolates to the desired frame rate and reconstructs a new video. Example:
 
 ```bash
-python setup_env.py
+python interpolate_video.py input.mp4 output.mp4 --model rife-v4.6 --fps_factor 2
 ```
 
-The environment will be created in the `venv` folder. Activate it with `source venv/bin/activate` on Linux/macOS or `venv\\Scripts\\activate` on Windows.
+## Upscaling Videos
+
+`upscale_video.py` uses RealSR or waifu2x to increase the resolution of a video. Specify the model name and output path:
+
+```bash
+python upscale_video.py input.mp4 output_upscaled.mp4 --model realsr-x4plus
+```
+
+Available models include `realsr-x4plus`, `realsr-x4plus-anime`, `waifu2x-cunet` and `waifu2x-upresnet10`. Check the respective repositories for more model options.
+
+### GUI Usage
+
+The Tkinter GUI (`GUI.py`) now exposes upscaling alongside interpolation. Select an input file, choose a RIFE model, enable the *Upscale* checkbox and pick the desired upscaler and model. When you click **Start**, the video will be interpolated and optionally upscaled using your chosen settings.
+
+## Example Commands
+
+```bash
+# Interpolate only
+python interpolate_video.py src.mp4 out.mp4 --fps_factor 4
+
+# Upscale only
+python upscale_video.py src.mp4 out_upscaled.mp4 --model waifu2x-cunet
+
+# Interpolate then upscale
+python interpolate_video.py src.mp4 temp.mp4 --fps_factor 2
+python upscale_video.py temp.mp4 final.mp4 --model realsr-x4plus
+```
+
