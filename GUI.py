@@ -103,7 +103,7 @@ def run_upscaling(video_path):
     model_arg = method.lower()
 
     command = [
-        "python", "upscale_video.py", video_path, upscaled_output,
+        sys.executable, "upscale_video.py", video_path, upscaled_output,
         "--model", model_arg,
         "--scale", str(scale),
         "--output_format", output_format_var.get()
@@ -134,7 +134,7 @@ def run_interpolation():
         return
     
     command = [
-        "python", "interpolate_video.py", input_video, output_video,
+        sys.executable, "interpolate_video.py", input_video, output_video,
         "--model", model,
         "--fps_factor", str(fps_factor),
         "--output_format", output_format_var.get()
