@@ -2,6 +2,8 @@ VideoEnhancer provides scripts for video frame interpolation using RIFE and opti
 
 ## Installation
 
+Python 3.10 or newer is required.
+
 Install the required Python packages and fetch the RIFE, FFmpeg and upscaling binaries automatically:
 
 ```bash
