@@ -12,7 +12,6 @@ from PIL import Image
 import torch
 from diffusers import (
     StableDiffusionUpscalePipeline,
-    StableDiffusionLatentUpscalePipeline,
     LDMSuperResolutionPipeline,
 )
 
