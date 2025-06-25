@@ -185,7 +185,6 @@ def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str
             result.save(os.path.join(output_folder, fname))
         print("✅ Diffusion upscaling complete.")
         return
-
     exe_map = {
         "realsr": REALSRCNN_EXECUTABLE,
         "waifu2x": WAIFU2X_EXECUTABLE,
@@ -193,12 +192,39 @@ def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str
         "swinir": SWINIR_EXECUTABLE,
     }
     exe = exe_map.get(model)
-    # Verify that the executable exists either on PATH or at the given path
-    if not shutil.which(exe) and not os.path.isfile(exe):
+
+    def locate_executable(name: str) -> Optional[str]:
+        """Return path to executable if found locally or on PATH."""
+        # Check PATH first
+        path = shutil.which(name)
+        if path:
+            return path
+
+        # Check for <name>.exe in script directory
+        local = os.path.join(SCRIPT_DIR, name)
+        if os.name == "nt":
+            local_exe = local + ".exe"
+            if os.path.isfile(local_exe):
+                return local_exe
+        if os.path.isfile(local):
+            return local
+
+        # Check for executable inside folder with same name
+        folder_exe = os.path.join(SCRIPT_DIR, name, name)
+        if os.name == "nt":
+            folder_exe += ".exe"
+        if os.path.isfile(folder_exe):
+            return folder_exe
+
+        return None
+
+    exe_path = locate_executable(exe)
+    if not exe_path:
         raise FileNotFoundError(
             f"❌ Model binary '{exe}' was not found. Ensure it is installed and on your PATH."
         )
-    cmd = [exe, "-i", input_folder, "-o", output_folder, "-s", str(scale), "-f", "png"]
+
+    cmd = [exe_path, "-i", input_folder, "-o", output_folder, "-s", str(scale), "-f", "png"]
     if gpu is not None:
         cmd.extend(["-g", str(gpu)])
     print(f"🚀 Upscaling frames with {model} (scale={scale})...")

@@ -27,7 +27,11 @@ and upscaling executables. Pre-built binaries can be obtained from each
 project's releases, or you can compile them yourself. The `setup_env.py` script
 in this repository can help create a virtual environment if needed.
 
-The `install_requirements.py` script now downloads the latest Windows builds of RealSR, waifu2x, RealESRGAN and SwinIR automatically via the GitHub API. Diffusion model weights are fetched on first use.
+ The `install_requirements.py` script now downloads the latest Windows builds of RealSR, waifu2x, RealESRGAN and SwinIR automatically via the GitHub API. Diffusion model weights are fetched on first use.
+
+After running the installer the upscaler executables reside in folders such as
+`waifu2x-ncnn-vulkan` within this repository. `upscale_video.py` will
+automatically search these folders so you don't need to modify your `PATH`.
 
 
 ## Interpolating Videos
