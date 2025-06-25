@@ -3,6 +3,8 @@ opencv-python
 tqdm
 requests
 tkinterdnd2
-diffusers
+
+diffusers>=0.33.1
+
 torch
 pillow
