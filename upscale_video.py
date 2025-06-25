@@ -10,6 +10,7 @@ from typing import Optional
 
 from PIL import Image
 import torch
+
 try:
     from diffusers import (
         StableDiffusionUpscalePipeline,
@@ -20,6 +21,7 @@ except Exception as e:  # pragma: no cover - optional dependency
     StableDiffusionUpscalePipeline = None
     StableDiffusionLatentUpscalePipeline = None
     LDMSuperResolutionPipeline = None
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -141,6 +143,7 @@ def reconstruct_video(
 def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str, gpu: Optional[int]) -> None:
     """Run the selected upscaling model on extracted frames."""
     if model in {"sdx4", "ldsr"}:
+
         if model == "sdx4":
             if StableDiffusionUpscalePipeline is None:
                 raise RuntimeError("Diffusion upscaling requires the diffusers package")
@@ -151,6 +154,7 @@ def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str
                 raise RuntimeError("Diffusion upscaling requires the diffusers package")
             if scale != 4:
                 raise ValueError("LDSR upscaler only supports 4x scale")
+
 
         device = f"cuda:{gpu}" if (gpu is not None and gpu >= 0 and torch.cuda.is_available()) else "cpu"
         dtype = torch.float16 if "cuda" in device else torch.float32

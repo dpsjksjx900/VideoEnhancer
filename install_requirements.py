@@ -47,6 +47,7 @@ REALSRCNN_REPO = "nihui/realsr-ncnn-vulkan"
 WAIFU2X_REPO = "nihui/waifu2x-ncnn-vulkan"
 REALESRGAN_REPO = "xinntao/Real-ESRGAN-ncnn-vulkan"
 SWINIR_REPO = "nihui/swinir-ncnn-vulkan"
+
 REALSRCNN_FOLDER = "realsr-ncnn-vulkan"
 WAIFU2X_FOLDER = "waifu2x-ncnn-vulkan"
 REALESRGAN_FOLDER = "realesrgan-ncnn-vulkan"
@@ -157,11 +158,13 @@ def install_realsr():
     if check_realsr():
         print("✅ RealSR is already installed.")
         return
+
     url = get_latest_asset_url(REALSRCNN_REPO, "windows.zip")
     if not url:
         print("❌ Failed to fetch RealSR download URL.")
         return
     download_and_extract(url, "realsr.zip", "realsr-ncnn-vulkan", REALSRCNN_FOLDER)
+
     print("✅ RealSR installation completed.")
 
 
@@ -174,6 +177,7 @@ def install_realesrgan():
         print("❌ Failed to fetch RealESRGAN download URL.")
         return
     download_and_extract(url, "realesrgan.zip", "realesrgan-ncnn-vulkan", REALESRGAN_FOLDER)
+
     print("✅ RealESRGAN installation completed.")
 
 
@@ -189,11 +193,13 @@ def install_waifu2x():
     if check_waifu2x():
         print("✅ Waifu2x is already installed.")
         return
+      
     url = get_latest_asset_url(WAIFU2X_REPO, "windows.zip")
     if not url:
         print("❌ Failed to fetch Waifu2x download URL.")
         return
     download_and_extract(url, "waifu2x.zip", "waifu2x-ncnn-vulkan", WAIFU2X_FOLDER)
+
     print("✅ Waifu2x installation completed.")
 
 
@@ -201,11 +207,13 @@ def install_swinir():
     if check_swinir():
         print("✅ SwinIR is already installed.")
         return
+
     url = get_latest_asset_url(SWINIR_REPO, "windows.zip")
     if not url:
         print("❌ Failed to fetch SwinIR download URL.")
         return
     download_and_extract(url, "swinir.zip", "swinir-ncnn-vulkan", SWINIR_FOLDER)
+
     print("✅ SwinIR installation completed.")
 
 def install_rife():
