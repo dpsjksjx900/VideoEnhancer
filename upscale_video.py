@@ -184,6 +184,11 @@ def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str
         "swinir": SWINIR_EXECUTABLE,
     }
     exe = exe_map.get(model)
+    # Verify that the executable exists either on PATH or at the given path
+    if not shutil.which(exe) and not os.path.isfile(exe):
+        raise FileNotFoundError(
+            f"❌ Model binary '{exe}' was not found. Ensure it is installed and on your PATH."
+        )
     cmd = [exe, "-i", input_folder, "-o", output_folder, "-s", str(scale), "-f", "png"]
     if gpu is not None:
         cmd.extend(["-g", str(gpu)])
