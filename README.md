@@ -33,6 +33,8 @@ Available models include `realsr`, `waifu2x`, `realesrgan`, `swinir`, `sdx4` and
 
 The Tkinter GUI (`GUI.py`) now exposes upscaling alongside interpolation. Select an input file, choose a RIFE model, enable the *Upscale* checkbox and pick the desired upscaler and model. When you click **Start**, the video will be interpolated and optionally upscaled using your chosen settings.
 
+The GUI will automatically install RIFE and FFmpeg on first launch if they are missing. Use `python GUI.py --install` or choose **Tools → Install Dependencies** in the menu to run the installer manually.
+
 ## Example Commands
 
 ```bash

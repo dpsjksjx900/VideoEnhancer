@@ -17,14 +17,24 @@ except ImportError:
         print("Drag-and-drop disabled. Install tkinterdnd2 for this feature.")
         HAS_DND = False
 
-def install_dependencies():
-    """Runs the installation script for RIFE and FFmpeg."""
+
+def dependencies_installed():
+    """Return True if RIFE and FFmpeg appear to be installed."""
+    rife_ok = os.path.isdir(os.path.join(os.getcwd(), "rife-ncnn-vulkan"))
+    ffmpeg_ok = shutil.which("ffmpeg") is not None
+    return rife_ok and ffmpeg_ok
+
+
+def install_dependencies(force: bool = False):
+    """Install packages and binaries if missing or when forced."""
+    if not force and dependencies_installed():
+        return
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
         subprocess.run([sys.executable, "install_requirements.py"], check=True)
+        messagebox.showinfo("Installation", "Dependencies installed successfully!")
     except subprocess.CalledProcessError:
         print("Failed to run install_requirements.py. Ensure requirements.txt packages are installed.")
-    # messagebox.showinfo("Installation", "Dependencies installed successfully!")
 
 def select_video():
     """Opens file dialog to select input video."""
@@ -175,12 +185,23 @@ def run_interpolation():
     messagebox.showinfo("Done", f"Processing completed! Output: {final_output}")
 
 
-install_dependencies()
+force_install = False
+if "--install" in sys.argv:
+    sys.argv.remove("--install")
+    force_install = True
+
+install_dependencies(force=force_install)
 
 # Initialize Tkinter GUI
 root = TkinterDnD.Tk() if HAS_DND else tk.Tk()
 root.title("RIFE Video Interpolation GUI")
 root.geometry("650x600")
+
+menubar = tk.Menu(root)
+tools_menu = tk.Menu(menubar, tearoff=0)
+tools_menu.add_command(label="Install Dependencies", command=lambda: install_dependencies(force=True))
+menubar.add_cascade(label="Tools", menu=tools_menu)
+root.config(menu=menubar)
 
 output_format_var = tk.StringVar(value="mp4")
 interpolate_var = tk.BooleanVar(value=True)
