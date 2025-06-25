@@ -7,15 +7,47 @@ import json
 import requests
 import shutil
 
+
+def get_latest_asset_url(repo: str, keyword: str) -> str | None:
+    """Return download URL for the latest release asset matching keyword."""
+    api_url = f"https://api.github.com/repos/{repo}/releases/latest"
+    try:
+        resp = requests.get(api_url, timeout=30)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        for asset in data.get("assets", []):
+            name = asset.get("name", "")
+            if keyword in name:
+                return asset.get("browser_download_url")
+    except Exception:
+        return None
+    return None
+
+
+def download_and_extract(url: str, zip_name: str, folder_prefix: str, target: str) -> None:
+    """Download a zip file and extract it to target folder."""
+    print(f"⚡ Downloading from {url}...")
+    urllib.request.urlretrieve(url, zip_name)
+    with zipfile.ZipFile(zip_name, "r") as zip_ref:
+        zip_ref.extractall(".")
+    os.remove(zip_name)
+    if not os.path.exists(target):
+        for d in os.listdir('.'):
+            if d.startswith(folder_prefix) and os.path.isdir(d):
+                os.rename(d, target)
+                break
+
 REALSRCNN_EXECUTABLE = "realsr-ncnn-vulkan"
 WAIFU2X_EXECUTABLE = "waifu2x-ncnn-vulkan"
 REALESRGAN_EXECUTABLE = "realesrgan-ncnn-vulkan"
 SWINIR_EXECUTABLE = "swinir-ncnn-vulkan"
 
-REALSRCNN_URL = "https://github.com/nihui/realsr-ncnn-vulkan/releases/latest/download/realsr-ncnn-vulkan.zip"
-WAIFU2X_URL = "https://github.com/nihui/waifu2x-ncnn-vulkan/releases/latest/download/waifu2x-ncnn-vulkan.zip"
-REALESRGAN_URL = "https://github.com/nihui/realesrgan-ncnn-vulkan/releases/latest/download/realesrgan-ncnn-vulkan.zip"
-SWINIR_URL = "https://github.com/nihui/swinir-ncnn-vulkan/releases/latest/download/swinir-ncnn-vulkan.zip"
+REALSRCNN_REPO = "nihui/realsr-ncnn-vulkan"
+WAIFU2X_REPO = "nihui/waifu2x-ncnn-vulkan"
+REALESRGAN_REPO = "xinntao/Real-ESRGAN-ncnn-vulkan"
+SWINIR_REPO = "nihui/swinir-ncnn-vulkan"
+
 REALSRCNN_FOLDER = "realsr-ncnn-vulkan"
 WAIFU2X_FOLDER = "waifu2x-ncnn-vulkan"
 REALESRGAN_FOLDER = "realesrgan-ncnn-vulkan"
@@ -126,17 +158,13 @@ def install_realsr():
     if check_realsr():
         print("✅ RealSR is already installed.")
         return
-    print(f"⚡ Downloading RealSR from {REALSRCNN_URL}...")
-    zip_path = "realsr.zip"
-    urllib.request.urlretrieve(REALSRCNN_URL, zip_path)
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(".")
-    os.remove(zip_path)
-    if not os.path.exists(REALSRCNN_FOLDER):
-        for d in os.listdir('.'):
-            if d.startswith('realsr-ncnn-vulkan') and os.path.isdir(d):
-                os.rename(d, REALSRCNN_FOLDER)
-                break
+
+    url = get_latest_asset_url(REALSRCNN_REPO, "windows.zip")
+    if not url:
+        print("❌ Failed to fetch RealSR download URL.")
+        return
+    download_and_extract(url, "realsr.zip", "realsr-ncnn-vulkan", REALSRCNN_FOLDER)
+
     print("✅ RealSR installation completed.")
 
 
@@ -144,17 +172,12 @@ def install_realesrgan():
     if check_realesrgan():
         print("✅ RealESRGAN is already installed.")
         return
-    print(f"⚡ Downloading RealESRGAN from {REALESRGAN_URL}...")
-    zip_path = "realesrgan.zip"
-    urllib.request.urlretrieve(REALESRGAN_URL, zip_path)
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(".")
-    os.remove(zip_path)
-    if not os.path.exists(REALESRGAN_FOLDER):
-        for d in os.listdir('.'):
-            if d.startswith('realesrgan-ncnn-vulkan') and os.path.isdir(d):
-                os.rename(d, REALESRGAN_FOLDER)
-                break
+    url = get_latest_asset_url(REALESRGAN_REPO, "windows.zip")
+    if not url:
+        print("❌ Failed to fetch RealESRGAN download URL.")
+        return
+    download_and_extract(url, "realesrgan.zip", "realesrgan-ncnn-vulkan", REALESRGAN_FOLDER)
+
     print("✅ RealESRGAN installation completed.")
 
 
@@ -170,17 +193,13 @@ def install_waifu2x():
     if check_waifu2x():
         print("✅ Waifu2x is already installed.")
         return
-    print(f"⚡ Downloading Waifu2x from {WAIFU2X_URL}...")
-    zip_path = "waifu2x.zip"
-    urllib.request.urlretrieve(WAIFU2X_URL, zip_path)
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(".")
-    os.remove(zip_path)
-    if not os.path.exists(WAIFU2X_FOLDER):
-        for d in os.listdir('.'):
-            if d.startswith('waifu2x-ncnn-vulkan') and os.path.isdir(d):
-                os.rename(d, WAIFU2X_FOLDER)
-                break
+      
+    url = get_latest_asset_url(WAIFU2X_REPO, "windows.zip")
+    if not url:
+        print("❌ Failed to fetch Waifu2x download URL.")
+        return
+    download_and_extract(url, "waifu2x.zip", "waifu2x-ncnn-vulkan", WAIFU2X_FOLDER)
+
     print("✅ Waifu2x installation completed.")
 
 
@@ -188,17 +207,13 @@ def install_swinir():
     if check_swinir():
         print("✅ SwinIR is already installed.")
         return
-    print(f"⚡ Downloading SwinIR from {SWINIR_URL}...")
-    zip_path = "swinir.zip"
-    urllib.request.urlretrieve(SWINIR_URL, zip_path)
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(".")
-    os.remove(zip_path)
-    if not os.path.exists(SWINIR_FOLDER):
-        for d in os.listdir('.'):
-            if d.startswith('swinir-ncnn-vulkan') and os.path.isdir(d):
-                os.rename(d, SWINIR_FOLDER)
-                break
+
+    url = get_latest_asset_url(SWINIR_REPO, "windows.zip")
+    if not url:
+        print("❌ Failed to fetch SwinIR download URL.")
+        return
+    download_and_extract(url, "swinir.zip", "swinir-ncnn-vulkan", SWINIR_FOLDER)
+
     print("✅ SwinIR installation completed.")
 
 def install_rife():

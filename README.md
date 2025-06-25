@@ -9,7 +9,7 @@ pip install -r requirements.txt
 python install_requirements.py
 ```
 
-The `install_requirements.py` script now downloads the latest RealSR, waifu2x, RealESRGAN and SwinIR executables automatically. Diffusion model weights are fetched on first use.
+The `install_requirements.py` script now downloads the latest Windows builds of RealSR, waifu2x, RealESRGAN and SwinIR automatically via the GitHub API. Diffusion model weights are fetched on first use.
 
 ## Interpolating Videos
 
