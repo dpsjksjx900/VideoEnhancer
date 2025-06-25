@@ -2,13 +2,20 @@ VideoEnhancer provides scripts for video frame interpolation using RIFE and opti
 
 ## Installation
 
+
 On **Windows** you can install the required Python packages and fetch the RIFE,
 FFmpeg and upscaling binaries automatically:
+
+Python 3.10 or newer is required.
+
+Install the required Python packages and fetch the RIFE, FFmpeg and upscaling binaries automatically:
+
 
 ```bash
 pip install -r requirements.txt
 python install_requirements.py
 ```
+
 
 The `install_requirements.py` script downloads the latest RealSR, waifu2x,
 RealESRGAN and SwinIR executables automatically. Diffusion model weights are
@@ -19,6 +26,9 @@ requirements.txt` and then manually install FFmpeg along with the desired RIFE
 and upscaling executables. Pre-built binaries can be obtained from each
 project's releases, or you can compile them yourself. The `setup_env.py` script
 in this repository can help create a virtual environment if needed.
+
+The `install_requirements.py` script now downloads the latest Windows builds of RealSR, waifu2x, RealESRGAN and SwinIR automatically via the GitHub API. Diffusion model weights are fetched on first use.
+
 
 ## Interpolating Videos
 
@@ -41,6 +51,8 @@ Available models include `realsr`, `waifu2x`, `realesrgan`, `swinir`, `sdx4` and
 ### GUI Usage
 
 The Tkinter GUI (`GUI.py`) now exposes upscaling alongside interpolation. Select an input file, choose a RIFE model, enable the *Upscale* checkbox and pick the desired upscaler and model. When you click **Start**, the video will be interpolated and optionally upscaled using your chosen settings.
+
+The GUI will automatically install RIFE and FFmpeg on first launch if they are missing. Use `python GUI.py --install` or choose **Tools → Install Dependencies** in the menu to run the installer manually.
 
 ## Example Commands
 
