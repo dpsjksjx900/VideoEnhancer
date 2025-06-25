@@ -8,8 +8,15 @@ import subprocess
 import time
 from typing import Optional
 
-from PIL import Image
-import torch
+try:
+    from PIL import Image
+except Exception:  # pragma: no cover - optional dependency
+    Image = None
+
+try:
+    import torch
+except Exception:  # pragma: no cover - optional dependency
+    torch = None
 
 
 try:
@@ -144,6 +151,8 @@ def reconstruct_video(
 def upscale_frames(model: str, scale: int, input_folder: str, output_folder: str, gpu: Optional[int]) -> None:
     """Run the selected upscaling model on extracted frames."""
     if model in {"sdx4", "ldsr"}:
+        if Image is None or torch is None:
+            raise RuntimeError("Diffusion upscaling requires Pillow and torch")
 
         if model == "sdx4":
             if StableDiffusionUpscalePipeline is None:
