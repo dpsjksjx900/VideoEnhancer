@@ -2,14 +2,23 @@ VideoEnhancer provides scripts for video frame interpolation using RIFE and opti
 
 ## Installation
 
-Install the required Python packages and fetch the RIFE, FFmpeg and upscaling binaries automatically:
+On **Windows** you can install the required Python packages and fetch the RIFE,
+FFmpeg and upscaling binaries automatically:
 
 ```bash
 pip install -r requirements.txt
 python install_requirements.py
 ```
 
-The `install_requirements.py` script now downloads the latest RealSR, waifu2x, RealESRGAN and SwinIR executables automatically. Diffusion model weights are fetched on first use.
+The `install_requirements.py` script downloads the latest RealSR, waifu2x,
+RealESRGAN and SwinIR executables automatically. Diffusion model weights are
+fetched on first use. The script is designed for Windows only.
+
+Linux or macOS users should install the packages with `pip install -r
+requirements.txt` and then manually install FFmpeg along with the desired RIFE
+and upscaling executables. Pre-built binaries can be obtained from each
+project's releases, or you can compile them yourself. The `setup_env.py` script
+in this repository can help create a virtual environment if needed.
 
 ## Interpolating Videos
 
